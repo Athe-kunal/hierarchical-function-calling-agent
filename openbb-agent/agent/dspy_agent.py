@@ -4,12 +4,18 @@ from langchain.schema import Document
 import chromadb.utils.embedding_functions as embedding_functions
 import os
 from agent.utils import generate_pairs, generate_pairs_recursive, get_trail_list_pairs
-from dotenv import load_dotenv
+from dotenv import load_dotenv,find_dotenv
+import yaml
+load_dotenv(find_dotenv(),override=True)
 
-load_dotenv(override=True)
+with open("config.yaml") as stream:
+    try:
+        config_params = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
 
 emb_fn = embedding_functions.OpenAIEmbeddingFunction(
-    api_key=os.environ["OPENAI_API_KEY"], model_name="text-embedding-3-small"
+    api_key=os.environ["OPENAI_API_KEY"], model_name=config_params["VECTORDB"]["EMBEDDING_MODEL_NAME"]
 )
 first_level_llm = dspy.OpenAI(model="gpt-3.5-turbo-1106", max_tokens=1024)
 function_calling_llm = dspy.OpenAI(model="gpt-3.5-turbo-1106", max_tokens=1024)
