@@ -1,3 +1,4 @@
 *.log
-PANDAS
+PandasDB
 __pycache__
+Pandas

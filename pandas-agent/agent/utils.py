@@ -1,7 +1,6 @@
 import networkx as nx
 import json
 import yaml
-import chromadb
 import chromadb.utils.embedding_functions as embedding_functions
 from chromadb.utils.batch_utils import create_batches
 from dotenv import load_dotenv, find_dotenv
@@ -46,6 +45,9 @@ def add_openai_functions(data):
                             type_dict = {"type": type}
                         elif "bool" in type:
                             type = "boolean"
+                            type_dict = {"type": type}
+                        elif "float" in type:
+                            type = "float"
                             type_dict = {"type": type}
                         elif "dict" in type:
                             type = "dictionary"
@@ -97,25 +99,26 @@ def build_no_summary_graph():
         for sub_level in data[parent]["functions"]:
             for func in sub_level["function_definitions"]:
                 func_name = func["function_name"]
-                pandas_graph.add_nodes_from(
-                    [
-                        (
-                            func_name,
-                            {
-                                "function_desc": func["function_text"],
-                                "function_url": func["function_url"],
-                                "trail": parent_name,
-                                "type": "function_node",
-                                "function_name": func["function_name"],
-                                "function_calling": str(func["openai_function"]),
-                                "parameter_names_desc": str(
-                                    func["parameter_names_desc"]
-                                ),
-                            },
-                        )
-                    ]
-                )
-                pandas_graph.add_edge(parent_name, func_name)
+                if func_name not in pandas_graph.nodes:
+                    pandas_graph.add_nodes_from(
+                        [
+                            (
+                                func_name,
+                                {
+                                    "function_desc": func["function_text"],
+                                    "function_url": func["function_url"],
+                                    "trail": parent_name,
+                                    "type": "function_node",
+                                    "function_name": func["function_name"],
+                                    "function_calling": str(func["openai_function"]),
+                                    "parameter_names_desc": str(
+                                        func["parameter_names_desc"]
+                                    ),
+                                },
+                            )
+                        ]
+                    )
+                    pandas_graph.add_edge(parent_name, func_name)
     return pandas_graph
 
 
@@ -154,25 +157,26 @@ def build_graph():
         for sub_level in data[parent]["functions"]:
             for func in sub_level["function_definitions"]:
                 func_name = func["function_name"]
-                pandas_graph.add_nodes_from(
-                    [
-                        (
-                            func_name,
-                            {
-                                "function_desc": func["function_text"],
-                                "function_url": func["function_url"],
-                                "trail": parent_name,
-                                "type": "function_node",
-                                "function_name": func["function_name"],
-                                "function_calling": str(func["openai_function"]),
-                                "parameter_names_desc": str(
-                                    func["parameter_names_desc"]
-                                ),
-                            },
-                        )
-                    ]
-                )
-                pandas_graph.add_edge(parent_name, func_name)
+                if func_name not in pandas_graph.nodes:
+                    pandas_graph.add_nodes_from(
+                        [
+                            (
+                                func_name,
+                                {
+                                    "function_desc": func["function_text"],
+                                    "function_url": func["function_url"],
+                                    "trail": parent_name,
+                                    "type": "function_node",
+                                    "function_name": func["function_name"],
+                                    "function_calling": str(func["openai_function"]),
+                                    "parameter_names_desc": str(
+                                        func["parameter_names_desc"]
+                                    ),
+                                },
+                            )
+                        ]
+                    )
+                    pandas_graph.add_edge(parent_name, func_name)
     return pandas_graph
 
 

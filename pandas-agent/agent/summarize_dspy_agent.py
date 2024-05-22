@@ -71,7 +71,7 @@ class SummarizationPipeline(dspy.Module):
         return summaries
 
 
-def get_summaries(pandas_graph):
+def get_summaries(pandas_graph,MAX_WORDS=500):
     parent_nodes = [
         node
         for node, attributes in pandas_graph.nodes(data=True)
@@ -82,14 +82,14 @@ def get_summaries(pandas_graph):
     for _, attributes in pandas_graph.nodes(data=True):
         if attributes["type"] == "function_node":
             parent_text_dict[attributes["trail"]].append(
-                attributes["metadata"]["function_text"]
+                attributes["function_desc"]
             )
     parent_summary_dict = {k: "" for k in parent_text_dict}
 
     for parent in parent_text_dict:
         if parent_summary_dict[parent] == "":
             print(f"Summarizing for {parent}")
-            summ = SummarizationPipeline(parent, parent_text_dict[parent])
+            summ = SummarizationPipeline(parent, parent_text_dict[parent],MAX_WORDS=MAX_WORDS)
             summary = summ()
             parent_summary_dict[parent] = summary
 
@@ -100,3 +100,4 @@ def get_summaries(pandas_graph):
     print(
         f"Summaries saved to {config_params['PARENTS_SUMMARY']['SUMMARY_JSON_FILE_PATH']}"
     )
+    return parent_summary_dict

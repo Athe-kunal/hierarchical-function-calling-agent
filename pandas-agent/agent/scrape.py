@@ -86,7 +86,27 @@ def scrape_pandas_website():
             first_level[first_level_name]["functions"][idx][
                 "function_urls"
             ] = function_urls
+    with open(
+        config_params["FUNCTION_CALLING_DATASET"]["PANDAS_SAVE_PATH"],
+        "w",
+        encoding="utf-8",
+    ) as json_file:
+        json_file.write(first_level)
 
+    print(
+        "Data has been successfully written to",
+        config_params["FUNCTION_CALLING_DATASET"]["PANDAS_SAVE_PATH"],
+    )
+    return first_level
+
+def add_param_openai_data():
+    with open(
+        config_params["FUNCTION_CALLING_DATASET"]["PANDAS_SAVE_PATH"],
+        "r",
+        encoding="utf-8",
+    ) as json_file:
+        # Load the JSON data from the file
+        first_level = json.load(json_file)
     function_def_dict, _ = get_param_data(first_level)
     function_def_dict = add_openai_functions(function_def_dict)
     # Serialize the dictionary to a JSON string

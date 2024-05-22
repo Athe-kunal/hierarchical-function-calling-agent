@@ -37,7 +37,7 @@ emb_fn = embedding_functions.OpenAIEmbeddingFunction(
     model_name=config_params["VECTORDB"]["EMBEDDING_MODEL_NAME"],
 )
 
-llm = dspy.OpenAI()
+llm = dspy.OpenAI(model="gpt-3.5-turbo-0125	",max_tokens=256)
 dspy.settings.configure(lm=llm)
 
 
