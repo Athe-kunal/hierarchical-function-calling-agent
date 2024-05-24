@@ -2,55 +2,77 @@ from tqdm import tqdm
 import requests
 from bs4 import BeautifulSoup
 
-def get_param_data(first_level):
-    not_worked = []
-    pbar = tqdm(total=len(first_level.keys()))
-    for parent in first_level:
-        parent_dict = first_level[parent]["functions"]
-        for sub_level in parent_dict:
-            for _,sub_level_vals in sub_level.items():
-                for sub_level in sub_level_vals:
-                    func_url = sub_level["func_url"]
-                    func_response = requests.get(func_url)
-                    func_soup = BeautifulSoup(
-                        func_response.content, "lxml", from_encoding="utf-8"
-                    )
+def function_text_to_req(s):
+    star_idx = s.find(" *,")
+    if star_idx == -1:
+        return []
+    req_str = s[s.find("(") + 1 : s.find("*")].strip()[:-1]
+    req_list = [i.strip() for i in req_str.split(",")]
+    return req_list
 
-                    func_name = func_soup.find("h1").text.replace("#", "")  # remove #
-                    elem = func_soup.find(attrs={"class": "sig sig-object py"})
-                    try:
-                        full_function = elem.text.replace("[source]#", "").replace("\n", "")
-                        func_text = func_soup.find("dd").find("p").text
-                        curr_dict = {
-                            "function_name": func_name,
-                            "full_function": full_function,
-                            "function_text": func_text,
-                            "parameter_names_desc": [],
-                        }
-                        em = func_soup.find_all(attrs={"class": "field-odd"})
-                        if em[0].text == "Parameters:":
-                            param_names = em[-1].find_all("dt")
-                            desc_list = em[-1].find_all("dd")
-                            for pn, dn in zip(param_names, desc_list):
-                                try:
-                                    param_name = pn.strong.text
-                                    param_type = pn.find(attrs={"class": "classifier"}).text
-                                    if param_name == "**kwargs":
-                                        continue
-                                    param_desc = dn.text
-                                    curr_dict["parameter_names_desc"].append(
-                                        {
-                                            "param_name": param_name,
-                                            "param_type": param_type,
-                                            "param_desc": param_desc,
-                                        }
-                                    )
-                                except Exception as e:
-                                    pass
-                    except Exception as e:
-                        not_worked.append((func_name, func_text, e, func_url))
-                    finally:
-                        sub_level.update({"function_definitions":curr_dict})
-        pbar.update(1)
-    return first_level
+def add_function_calling(data):
+    for parent in data:
+        parent_data = data[parent]
+        for sub_level in parent_data["functions"]:
+            for _,sub_level_funcs in sub_level.items():
+                for sub_level_func in sub_level_funcs:
+                    function_definitions = sub_level_func['function_definitions']
+                    func_name = function_definitions["function_name"]
+                    function_calling = {
+                        "name": func_name,
+                        "descriptions": function_definitions["function_text"],
+                    }
+                    if function_definitions["parameter_names_desc"] != []:
+                        properties_dict = {}
+                        for params in function_definitions["parameter_names_desc"]:
+                            type = params["param_type"]
+                            if "int" in type:
+                                type = "integer"
+                                type_dict = {"type": type}
+                            elif "str" in type:
+                                type = "string"
+                                type_dict = {"type": type}
+                            elif "bool" in type:
+                                type = "boolean"
+                                type_dict = {"type": type}
+                            elif "float" in type:
+                                type = "float"
+                                type_dict = {"type": type}
+                            elif "float" in type:
+                                type = "float"
+                                type_dict = {"type": type}
+                            elif "callable" in type or "object" in type:
+                                type = "object"
+                                type_dict = {"type": type}
+                            elif "Union" in type or "list" in type or "array" in type:
+                                type = "array"
+                                type_dict = {"type": type}
+                            elif (
+                                "{" in type and "}" in type and "’" in type and "‘" in type
+                            ):
+                                list_params = type[type.find("{") + 1 : type.find("}")]
+                                list_params = (
+                                    list_params.replace("’", "").replace("‘", "").split(",")
+                                )
+                                type_dict = {"type": "string", "enum": list_params}
+                            else:
+                                type_dict = {"type": type}
+                            type_dict.update({"description": params['param_type'] + ". " + params["param_desc"]})
+
+                            properties_dict.update({params["param_name"]: type_dict})
+
+                        function_calling.update(
+                            {
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": properties_dict,
+                                    "required": function_text_to_req(function_definitions["full_function"]),
+                                }
+                            }
+                        )
+                        sub_level_func.update({"function_calling": function_calling})
+                    else:
+                        sub_level_func.update({"function_calling": {}})
+
+    return data
 

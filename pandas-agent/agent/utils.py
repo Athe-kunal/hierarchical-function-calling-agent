@@ -25,7 +25,7 @@ def add_openai_functions(data):
     for parent in data:
         for sub_level in data[parent]["functions"]:
             for func in sub_level["function_definitions"]:
-                func_name = "#".join(func["function_name"].split("."))
+                func_name = func["function_name"]
                 function_calling = {
                     "name": func_name,
                     "descriptions": func["function_text"],
@@ -36,9 +36,6 @@ def add_openai_functions(data):
                         type = params["param_type"]
                         if "int" in type:
                             type = "integer"
-
-                        elif ("Union" in type or "list" in type) and "str" in type:
-                            type = "string"
                             type_dict = {"type": type}
                         elif "str" in type:
                             type = "string"
@@ -49,8 +46,14 @@ def add_openai_functions(data):
                         elif "float" in type:
                             type = "float"
                             type_dict = {"type": type}
-                        elif "dict" in type:
-                            type = "dictionary"
+                        elif "float" in type:
+                            type = "float"
+                            type_dict = {"type": type}
+                        elif "callable" in type or "object" in type:
+                            type = "object"
+                            type_dict = {"type": type}
+                        elif "Union" in type or "list" in type or "array" in type:
+                            type = "array"
                             type_dict = {"type": type}
                         elif (
                             "{" in type and "}" in type and "’" in type and "‘" in type
@@ -62,7 +65,7 @@ def add_openai_functions(data):
                             type_dict = {"type": "string", "enum": list_params}
                         else:
                             type_dict = {"type": type}
-                        type_dict.update({"description": params["param_desc"]})
+                        type_dict.update({"description": params['param_type'] + ". " + params["param_desc"]})
 
                         properties_dict.update({params["param_name"]: type_dict})
 
@@ -75,7 +78,9 @@ def add_openai_functions(data):
                             }
                         }
                     )
-                func.update({"openai_function": function_calling})
+                    func.update({"function_calling": function_calling})
+                else:
+                    func.update({"function_calling": {}})
     return data
 
 
@@ -110,7 +115,7 @@ def build_no_summary_graph():
                                     "trail": parent_name,
                                     "type": "function_node",
                                     "function_name": func["function_name"],
-                                    "function_calling": str(func["openai_function"]),
+                                    "function_calling": str(func["function_calling"]),
                                     "parameter_names_desc": str(
                                         func["parameter_names_desc"]
                                     ),
@@ -168,7 +173,7 @@ def build_graph():
                                     "trail": parent_name,
                                     "type": "function_node",
                                     "function_name": func["function_name"],
-                                    "function_calling": str(func["openai_function"]),
+                                    "function_calling": str(func["function_calling"]),
                                     "parameter_names_desc": str(
                                         func["parameter_names_desc"]
                                     ),

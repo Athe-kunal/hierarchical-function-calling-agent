@@ -142,7 +142,8 @@ def get_param_data(first_level):
                 elem = func_soup.find(attrs={"class": "sig sig-object py"})
                 try:
                     full_function = elem.text.replace("[source]#", "").replace("\n", "")
-                    func_text = func_soup.find("dd").find("p").text
+                    func_text = func_soup.find("dd").find_all("p")
+                    func_text = "\n".join([ft.text for ft in func_text])
                     curr_dict = {
                         "function_name": func_name,
                         "full_function": full_function,
