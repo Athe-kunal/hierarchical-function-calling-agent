@@ -3,15 +3,14 @@ from dotenv import load_dotenv, find_dotenv
 from tqdm import tqdm
 import json
 import yaml
+from agent.utils import get_parents_dict
 
 with open("config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
         print(exc)
-load_dotenv(find_dotenv(), override=True)
-
-
+load_dotenv(find_dotenv(),override=True)
 class SummarizationGeneration(dspy.Signature):
     """You are given a list of descriptions of different functions separated by newline.
     Your task is to summarize all the text into coherent summary that covers all the functions descriptions.
@@ -70,29 +69,15 @@ class SummarizationPipeline(dspy.Module):
             pbar.update(1)
         return summaries
 
-
-def get_summaries(pandas_graph,MAX_WORDS=500):
-    parent_nodes = [
-        node
-        for node, attributes in pandas_graph.nodes(data=True)
-        if attributes["type"] == "parent_node"
-    ]
-
-    parent_text_dict = {k: [] for k in parent_nodes}
-    for _, attributes in pandas_graph.nodes(data=True):
-        if attributes["type"] == "function_node":
-            parent_text_dict[attributes["trail"]].append(
-                attributes["function_desc"]
-            )
-    parent_summary_dict = {k: "" for k in parent_text_dict}
-
-    for parent in parent_text_dict:
+def run_summaries_agent(sklearn_graph):
+    parent_dict = get_parents_dict(sklearn_graph)
+    parent_summary_dict = {}
+    for parent in parent_dict:
         if parent_summary_dict[parent] == "":
             print(f"Summarizing for {parent}")
-            summ = SummarizationPipeline(parent, parent_text_dict[parent],MAX_WORDS=MAX_WORDS)
-            summary = summ()
+            summ_pipeline = SummarizationPipeline(parent, parent_dict[parent],MAX_WORDS=500)
+            summary = summ_pipeline()
             parent_summary_dict[parent] = summary
-
     json.dump(
         parent_summary_dict,
         open(config_params["PARENTS_SUMMARY"]["SUMMARY_JSON_FILE_PATH"], "w"),

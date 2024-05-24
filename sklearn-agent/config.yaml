@@ -1,10 +1,10 @@
 FUNCTION_CALLING_DATASET:
-  FUNCTION_SAVE_DEST: "data/pandas_function_openai.json"
-  PANDAS_SAVE_PATH: "data/pandas_save.json"
+  FUNCTION_SAVE_DEST: "data/sklearn_function_openai.json"
+  SKLEARN_SAVE_PATH: "data/sklearn.json"
 
 VECTORDB:
-  BASE_DATABASE_PATH: "data/PandasDB"
-  COLLECTION_NAME: "pandas_docs"
+  BASE_DATABASE_PATH: "data/SklearnDB"
+  COLLECTION_NAME: "sklearn_docs"
   EMBEDDING_MODEL_NAME: "text-embedding-3-small"
 
 PARENTS_SUMMARY:

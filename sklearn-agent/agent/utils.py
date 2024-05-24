@@ -1,7 +1,7 @@
 from tqdm import tqdm
 import requests
 from bs4 import BeautifulSoup
-
+import networkx as nx
 def function_text_to_req(s):
     star_idx = s.find(" *,")
     if star_idx == -1:
@@ -76,3 +76,50 @@ def add_function_calling(data):
 
     return data
 
+
+def build_no_summary_graph(function_calling_data):
+    sklearn_graph = nx.DiGraph()
+
+    parent_names = [
+            (function_calling_data[d]["name"], {"url": function_calling_data[d]["url"], "type": "parent_node"}) for d in function_calling_data
+        ]
+    sklearn_graph.add_nodes_from(parent_names)
+    for parent in function_calling_data:
+        parent_data = function_calling_data[parent]
+        parent_name = parent_data['name']
+        for sub_level in parent_data["functions"]:
+            for sub_level_name,sub_level_funcs in sub_level.items():
+                # if sub_level_name == "defaults":
+                unique_sub_level_name = parent_name + "#" + sub_level_name
+                child_text_list = []
+                child_nodes = []
+                for sub_level_func in sub_level_funcs:
+                    func_name = sub_level_func['function_definitions']['function_name']
+                    if func_name not in sklearn_graph.nodes:
+                        attribute_dict = {
+                            "url": sub_level_func['func_url'],
+                            "function_name": func_name,
+                            "full_function": sub_level_func['function_definitions']['full_function'],
+                            "function_text": sub_level_func['function_definitions']['function_text'],
+                            "parameter_names_desc": sub_level_func['function_definitions']['parameter_names_desc'],
+                            "function_calling": sub_level_func['function_calling'],
+                            "type": "function_node",
+                            "trail": f"{parent_name}-->{sub_level_name}"
+                        }
+                        child_text_list.append(sub_level_func['function_definitions']['function_text'].replace("Examples","").strip())
+                        
+                        child_nodes.append((func_name,attribute_dict))
+                sklearn_graph.add_nodes_from([(unique_sub_level_name,{"type":"sub_level_node","child_texts":child_text_list,"trail":parent_name})])
+                sklearn_graph.add_edge(parent_name,unique_sub_level_name)
+                sklearn_graph.add_nodes_from(child_nodes)
+                for cn in child_nodes:
+                    sklearn_graph.add_edge(unique_sub_level_name,cn[0])      
+    return sklearn_graph
+
+def get_parents_dict(sklearn_graph):
+    parent_dict = {node:[] for node,attr in sklearn_graph.nodes(data=True) if attr['type']=='parent_node'}
+
+    for node,attr in sklearn_graph.nodes(data=True):
+        if attr['type'] == 'sub_level_node':
+            parent_dict[attr['trail']].extend(attr['child_texts'])
+    return parent_dict

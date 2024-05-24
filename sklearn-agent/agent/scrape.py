@@ -1,6 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from agent.utils import add_function_calling
+import yaml
+with open("config.yaml") as stream:
+    try:
+        config_params = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
 def get_links(id_elem, class_name):
     def process_link(link):
         link = link.replace("..","")
@@ -53,7 +60,6 @@ def scrape_sklearn_website():
     base_parent_url = "https://scikit-learn.org/stable/"
     response = requests.get(base_url)
     soup = BeautifulSoup(response.text, "lxml")
-    base_func_url = "https://pandas.pydata.org/docs/reference/"
     l1_elems = soup.find_all(class_="toctree-l1")
 
     first_level = {}
@@ -111,8 +117,16 @@ def scrape_sklearn_website():
             tables = parent_soup.find(class_="autosummary longtable table autosummary")
             all_urls_dict = [{"defaults":get_odd_even_urls(tables)}]
         first_level[parent_name]['functions'] = all_urls_dict
-    
-    return first_level
+    first_level_param_data = get_param_data(first_level)
+    first_level_function_calling = add_function_calling(first_level_param_data)
+    with open(
+        config_params["FUNCTION_CALLING_DATASET"]["FUNCTION_SAVE_DEST"],
+        "w",
+        encoding="utf-8",
+    ) as json_file:
+        json_file.write(first_level_function_calling)
+
+    return first_level_param_data
 
 def get_param_data(first_level):
     not_worked = []
