@@ -31,7 +31,7 @@ dspy.settings.configure(lm=summarization_llm)
 
 
 class SummarizationPipeline(dspy.Module):
-    def __init__(self, parent_node, parent_text, MAX_WORDS: int = 500):
+    def __init__(self, parent_node, parent_text,MAX_WORDS):
         self.parent_node = parent_node
         self.parent_text = parent_text
         self.summarization = dspy.Predict(SummarizationGeneration)
@@ -55,6 +55,7 @@ class SummarizationPipeline(dspy.Module):
                 curr_func_string += txt + "\n"
         if split_s == []:
             split_s.append(curr_func_string)
+        split_s = [s for s in split_s if s!=""]
         return split_s
 
     def forward(self):
@@ -69,13 +70,13 @@ class SummarizationPipeline(dspy.Module):
             pbar.update(1)
         return summaries
 
-def run_summaries_agent(sklearn_graph):
+def run_summaries_agent(sklearn_graph,MAX_WORDS:int=500):
     parent_dict = get_parents_dict(sklearn_graph)
     parent_summary_dict = {}
     for parent in parent_dict:
         if parent_summary_dict[parent] == "":
             print(f"Summarizing for {parent}")
-            summ_pipeline = SummarizationPipeline(parent, parent_dict[parent],MAX_WORDS=500)
+            summ_pipeline = SummarizationPipeline(parent, parent_dict[parent],MAX_WORDS=MAX_WORDS)
             summary = summ_pipeline()
             parent_summary_dict[parent] = summary
     json.dump(

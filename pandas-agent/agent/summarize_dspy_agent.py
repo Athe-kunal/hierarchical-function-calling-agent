@@ -56,6 +56,7 @@ class SummarizationPipeline(dspy.Module):
                 curr_func_string += txt + "\n"
         if split_s == []:
             split_s.append(curr_func_string)
+        split_s = [s for s in split_s if s!=""]
         return split_s
 
     def forward(self):
