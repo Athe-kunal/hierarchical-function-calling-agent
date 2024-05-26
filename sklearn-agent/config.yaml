@@ -1,6 +1,5 @@
 FUNCTION_CALLING_DATASET:
   FUNCTION_SAVE_DEST: "data/sklearn_function_openai.json"
-  SKLEARN_SAVE_PATH: "data/sklearn.json"
 
 VECTORDB:
   BASE_DATABASE_PATH: "data/SklearnDB"

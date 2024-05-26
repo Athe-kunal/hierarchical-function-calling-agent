@@ -124,7 +124,7 @@ def get_parents_dict(sklearn_graph):
             # parent_dict[attr['trail']].extend(attr['child_texts'])
             parent_trail = attr['trail']
             if node not in parent_dict[parent_trail]:
-                parent_dict[parent_trail].update({node:[attr['child_texts']]})
+                parent_dict[parent_trail].update({node:attr['child_texts']})
             else:
                 parent_dict[parent_trail][node].extend(attr['child_texts'])
     return parent_dict

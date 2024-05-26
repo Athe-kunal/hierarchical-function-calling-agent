@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from agent.utils import add_function_calling
 import yaml
+import json
 with open("config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
@@ -102,7 +103,7 @@ def scrape_sklearn_website():
                         else:
                             break
                 section_text = "".join(curr_h2_sections)
-                h2_sections.append(BeautifulSoup(section_text))
+                h2_sections.append(BeautifulSoup(section_text,"lxml"))
             if default_func_table is not None:
                 default_urls = get_odd_even_urls(default_func_table)
                 default_dict = {"defaults":default_urls}
@@ -124,9 +125,9 @@ def scrape_sklearn_website():
         "w",
         encoding="utf-8",
     ) as json_file:
-        json_file.write(first_level_function_calling)
+        json.dump(first_level_function_calling, json_file, ensure_ascii=True, indent=4)
 
-    return first_level_param_data
+    return first_level_function_calling
 
 def get_param_data(first_level):
     not_worked = []
