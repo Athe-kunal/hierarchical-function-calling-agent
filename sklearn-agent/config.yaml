@@ -5,8 +5,11 @@ VECTORDB:
   BASE_DATABASE_PATH: "data/SklearnDB"
   COLLECTION_NAME: "sklearn_docs"
   EMBEDDING_MODEL_NAME: "text-embedding-3-small"
+  BATCH_SIZE: 200
 
 PARENTS_SUMMARY:
   SUMMARY_JSON_FILE_PATH: "data/parent_summary_dict.json"
-  OPENAI_LLM_MODEL: "gpt-3.5-turbo"
+  OPENAI_LLM_MODEL: "gpt-3.5-turbo-0125"
 
+LEVEL_NODE_LLM:
+  OPENAI_LLM_MODEL: "gpt-3.5-turbo-0125"
