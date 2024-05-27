@@ -43,7 +43,7 @@ dspy.settings.configure(lm=llm)
 
 class PandasAgentChroma(dspy.Module):
     def __init__(self, collection):
-        super(PandasAgentChroma, self).__init__()
+        super().__init__()
         self.collection = collection
         self.firstSecondLevel = dspy.Predict(FirstSecondLevel)
 
@@ -107,7 +107,7 @@ class PandasAgentChroma(dspy.Module):
 
 class PandasAgentBM25(dspy.Module):
     def __init__(self, collection):
-        super(PandasAgentBM25, self).__init__()
+        super().__init__()
         self.collection = collection
         self.firstSecondLevel = dspy.Predict(FirstSecondLevel)
         parent_level = self.collection.get(
