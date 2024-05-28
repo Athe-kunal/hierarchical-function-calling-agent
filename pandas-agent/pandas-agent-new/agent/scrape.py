@@ -52,12 +52,12 @@ def get_odd_even_urls(id_elem):
     return odd_urls + even_urls
 
 def scrape_sklearn_website():
-    base_url = "https://scikit-learn.org/stable/api/index.html"
+    base_url = "https://pandas.pydata.org/docs/reference/index.html"
     response = requests.get(base_url)
     soup = BeautifulSoup(response.text, "lxml")
     l1_elems = soup.find_all(class_="toctree-l1")
 
-    base_parent_url = "https://scikit-learn.org/stable/"
+    base_parent_url = "https://pandas.pydata.org/docs/reference/"
     response = requests.get(base_url)
     soup = BeautifulSoup(response.text, "lxml")
     l1_elems = soup.find_all(class_="toctree-l1")
@@ -73,7 +73,7 @@ def scrape_sklearn_website():
                         href: {
                             "functions": [],
                             "name": func.text,
-                            "url": base_parent_url +"api/" + href,
+                            "url": base_parent_url + href,
                         }
                     }
                 )
