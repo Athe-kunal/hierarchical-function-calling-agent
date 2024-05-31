@@ -146,8 +146,25 @@ def get_param_data(first_level):
                     elem = func_soup.find(attrs={"class": "sig sig-object py"})
                     try:
                         full_function = elem.text.replace("[source]#", "").replace("\n", "")
-                        func_text = func_soup.find("dd").find_all("p")
-                        func_text = " ".join([ft.text for ft in func_text])
+                        # ../.. --> https://scikit-learn.org/stable/developers
+                        # ../ --> https://scikit-learn.org/stable/modules
+                        func_text = []
+                        for element in func_soup.find_all(True):
+                            if 'field-list' in element.get('class', []):
+                                break
+                            if element.name == 'p':
+                                func_text.append(element.text)
+                        func_text = " ".join([ft for ft in func_text])
+                        try:
+                            func_text_user_guide = func_soup.find("dd").find(class_="reference internal")['href']
+                            if "../.." in func_text_user_guide:
+                                func_text_user_guide = func_text_user_guide.replace("../..","https://scikit-learn.org/stable/developers")
+                            elif "../" in func_text_user_guide:
+                                func_text_user_guide = func_text_user_guide.replace("../","https://scikit-learn.org/stable/modules/")
+                            else:
+                                pass
+                        except:
+                            func_text_user_guide = ""
                         curr_dict = {
                             "function_name": func_name,
                             "full_function": full_function,

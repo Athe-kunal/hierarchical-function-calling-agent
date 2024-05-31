@@ -85,6 +85,39 @@ def build_docs_metadata(sklearn_graph):
                 embed_metadata.append(sub_level_attr)
     return embed_docs,embed_metadata
 
+def build_docs_metadata():
+    docs = []
+    metadata = []
+    with open(config_params['FUNCTION_CALLING_DATASET']['FUNCTION_SAVE_DEST'],"r") as jsonfile:
+        function_calling_data = json.load(jsonfile)
+    for parent in function_calling_data:
+        parent_data = function_calling_data[parent]
+        parent_name = parent_data['name']
+        for sub_level in parent_data["functions"]:
+            for sub_level_name,sub_level_funcs in sub_level.items():
+                # defaults --> function definitions
+                for funcs in sub_level_funcs:
+                    function_text = funcs['function_definitions']['function_text']
+                    function_text = function_text.replace("\n\n"," ")
+                    function_text = function_text.replace("\n"," ")
+                    function_text= function_text.replace("Examples"," ")
+                    docs.append(
+                        function_text
+                    )
+                    metadata.append(
+                        {
+                            "function_name": funcs['func_name'],
+                            "function_url": funcs['func_url'],
+                            "full_function": funcs['function_definitions']['full_function'],
+                            "function_calling": str(funcs['function_calling']),
+                            "parent": parent_name,
+                            "sub_level_name":sub_level_name,
+                            "sub_level_trail": parent_name,
+                            "function_trail":f"{parent_name}-->{sub_level_name}" 
+                        }
+                    )
+    return docs,metadata
+
 @retry(wait=wait_random_exponential(min=1,max=60),stop=stop_after_attempt(6))
 def build_database(offset:int,docs, metadata, api_key):
     database_path = config_params["VECTORDB"]["BASE_DATABASE_PATH"]

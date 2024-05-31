@@ -29,7 +29,7 @@ def clean_text(s:str):
     s = json.dumps(s)
     return ast.literal_eval(s)
 
-def build_docs_metadata(sklearn_graph):
+def build_graph_based_docs_metadata(sklearn_graph):
     text_splitter = RecursiveCharacterTextSplitter(
     separators=[
         "\n\n",
@@ -85,8 +85,41 @@ def build_docs_metadata(sklearn_graph):
                 embed_metadata.append(sub_level_attr)
     return embed_docs,embed_metadata
 
-@retry(wait=wait_random_exponential(min=1,max=60),stop=stop_after_attempt(6))
-def build_database(offset:int,docs, metadata, api_key):
+def build_docs_metadata():
+    docs = []
+    metadata = []
+    with open(config_params['FUNCTION_CALLING_DATASET']['FUNCTION_SAVE_DEST'],"r") as jsonfile:
+        function_calling_data = json.load(jsonfile)
+    for parent in function_calling_data:
+        parent_data = function_calling_data[parent]
+        parent_name = parent_data['name']
+        for sub_level in parent_data["functions"]:
+            for sub_level_name,sub_level_funcs in sub_level.items():
+                # defaults --> function definitions
+                for funcs in sub_level_funcs:
+                    function_text = funcs['function_definitions']['function_text']
+                    function_text = function_text.replace("\n\n"," ")
+                    function_text = function_text.replace("\n"," ")
+                    function_text= function_text.replace("Examples"," ")
+                    docs.append(
+                        function_text
+                    )
+                    metadata.append(
+                        {
+                            "function_name": funcs['func_name'],
+                            "function_url": funcs['func_url'],
+                            "full_function": funcs['function_definitions']['full_function'],
+                            "function_calling": str(funcs['function_calling']),
+                            "parent": parent_name,
+                            "sub_level_name":sub_level_name,
+                            "sub_level_trail": parent_name,
+                            "function_trail":f"{parent_name}-->{sub_level_name}" 
+                        }
+                    )
+    return docs,metadata
+
+# @retry(wait=wait_random_exponential(min=1,max=60),stop=stop_after_attempt(6))
+def build_database(docs, metadata, api_key):
     database_path = config_params["VECTORDB"]["BASE_DATABASE_PATH"]
     collection_name = config_params["VECTORDB"]["COLLECTION_NAME"]
     load_dotenv(find_dotenv(), override=True)
@@ -95,15 +128,11 @@ def build_database(offset:int,docs, metadata, api_key):
     )
 
     client = chromadb.PersistentClient(path=database_path)
-    sklearn_collection = client.get_or_create_collection(
+    sklearn_collection = client.create_collection(
         name=collection_name, embedding_function=emb_fn
     )
 
-    sklearn_ids = [f"id{offset+i}" for i in range(len(docs))]
-    all_ids = sklearn_collection.get()['ids']
-    if all(skids in all_ids for skids in sklearn_ids):
-        print(f"All ids already present in database {offset}")
-        return 
+    sklearn_ids = [f"id{i}" for i in range(len(docs))]
     batches = create_batches(
         api=client, ids=sklearn_ids, documents=docs, metadatas=metadata
     )

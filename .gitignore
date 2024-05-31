@@ -3,5 +3,5 @@ PandasDB
 __pycache__
 Pandas
 .env
-SKLEARN_DB
+SklearnDB
 *.txt
