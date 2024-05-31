@@ -4,7 +4,7 @@ import ast
 
 
 def run_function_calling(fcs, question: str):
-    
+
     for meta in fcs["metadatas"]:
         function_call = ast.literal_eval(meta["function_calling"])
         break
@@ -19,4 +19,3 @@ def run_function_calling(fcs, question: str):
 
 
 # def format_function(function_response):
-    

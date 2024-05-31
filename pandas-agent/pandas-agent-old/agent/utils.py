@@ -65,7 +65,13 @@ def add_openai_functions(data):
                             type_dict = {"type": "string", "enum": list_params}
                         else:
                             type_dict = {"type": type}
-                        type_dict.update({"description": params['param_type'] + ". " + params["param_desc"]})
+                        type_dict.update(
+                            {
+                                "description": params["param_type"]
+                                + ". "
+                                + params["param_desc"]
+                            }
+                        )
 
                         properties_dict.update({params["param_name"]: type_dict})
 

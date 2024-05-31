@@ -10,7 +10,9 @@ with open("config.yaml") as stream:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
         print(exc)
-load_dotenv(find_dotenv(),override=True)
+load_dotenv(find_dotenv(), override=True)
+
+
 class SummarizationGeneration(dspy.Signature):
     """You are given a list of descriptions of different functions separated by newline.
     Your task is to summarize all the text into coherent summary that covers all the functions descriptions.
@@ -26,12 +28,14 @@ class SummarizationGeneration(dspy.Signature):
     )
 
 
-summarization_llm = dspy.OpenAI(model=config_params["PARENTS_SUMMARY"]["OPENAI_LLM_MODEL"], max_tokens=4096)
+summarization_llm = dspy.OpenAI(
+    model=config_params["PARENTS_SUMMARY"]["OPENAI_LLM_MODEL"], max_tokens=4096
+)
 dspy.settings.configure(lm=summarization_llm)
 
 
 class SummarizationPipeline(dspy.Module):
-    def __init__(self, parent_node, parent_text,MAX_WORDS):
+    def __init__(self, parent_node, parent_text, MAX_WORDS):
         self.parent_node = parent_node
         self.parent_text = parent_text
         self.summarization = dspy.Predict(SummarizationGeneration)
@@ -55,7 +59,7 @@ class SummarizationPipeline(dspy.Module):
                 curr_func_string += txt + "\n"
         if split_s == []:
             split_s.append(curr_func_string)
-        split_s = [s for s in split_s if s!=""]
+        split_s = [s for s in split_s if s != ""]
         return split_s
 
     def forward(self):
@@ -70,13 +74,16 @@ class SummarizationPipeline(dspy.Module):
             pbar.update(1)
         return summaries
 
-def run_summaries_agent(sklearn_graph,MAX_WORDS:int=500):
+
+def run_summaries_agent(sklearn_graph, MAX_WORDS: int = 500):
     parent_dict = get_parents_dict(sklearn_graph)
     parent_summary_dict = {}
     for parent in parent_dict:
         if parent_summary_dict[parent] == "":
             print(f"Summarizing for {parent}")
-            summ_pipeline = SummarizationPipeline(parent, parent_dict[parent],MAX_WORDS=MAX_WORDS)
+            summ_pipeline = SummarizationPipeline(
+                parent, parent_dict[parent], MAX_WORDS=MAX_WORDS
+            )
             summary = summ_pipeline()
             parent_summary_dict[parent] = summary
     json.dump(

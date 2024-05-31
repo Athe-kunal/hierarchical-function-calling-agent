@@ -27,7 +27,9 @@ class SummarizationGeneration(dspy.Signature):
     )
 
 
-summarization_llm = dspy.OpenAI(model=config_params["PARENTS_SUMMARY"]["OPENAI_LLM_MODEL"], max_tokens=4096)
+summarization_llm = dspy.OpenAI(
+    model=config_params["PARENTS_SUMMARY"]["OPENAI_LLM_MODEL"], max_tokens=4096
+)
 dspy.settings.configure(lm=summarization_llm)
 
 
@@ -56,7 +58,7 @@ class SummarizationPipeline(dspy.Module):
                 curr_func_string += txt + "\n"
         if split_s == []:
             split_s.append(curr_func_string)
-        split_s = [s for s in split_s if s!=""]
+        split_s = [s for s in split_s if s != ""]
         return split_s
 
     def forward(self):
@@ -72,7 +74,7 @@ class SummarizationPipeline(dspy.Module):
         return summaries
 
 
-def get_summaries(pandas_graph,MAX_WORDS=500):
+def get_summaries(pandas_graph, MAX_WORDS=500):
     parent_nodes = [
         node
         for node, attributes in pandas_graph.nodes(data=True)
@@ -82,15 +84,15 @@ def get_summaries(pandas_graph,MAX_WORDS=500):
     parent_text_dict = {k: [] for k in parent_nodes}
     for _, attributes in pandas_graph.nodes(data=True):
         if attributes["type"] == "function_node":
-            parent_text_dict[attributes["trail"]].append(
-                attributes["function_desc"]
-            )
+            parent_text_dict[attributes["trail"]].append(attributes["function_desc"])
     parent_summary_dict = {k: "" for k in parent_text_dict}
 
     for parent in parent_text_dict:
         if parent_summary_dict[parent] == "":
             print(f"Summarizing for {parent}")
-            summ = SummarizationPipeline(parent, parent_text_dict[parent],MAX_WORDS=MAX_WORDS)
+            summ = SummarizationPipeline(
+                parent, parent_text_dict[parent], MAX_WORDS=MAX_WORDS
+            )
             summary = summ()
             parent_summary_dict[parent] = summary
 

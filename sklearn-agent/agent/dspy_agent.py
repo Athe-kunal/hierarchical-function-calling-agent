@@ -23,6 +23,7 @@ load_dotenv(find_dotenv(), override=True)
 #     "Be precise and output only the relevant key or keys from the provided keys only."
 #     "Don't include any other information and DON'T answer None or N/A"
 
+
 #     query = dspy.InputField(prefix="Query which you need to classify: ", format=str)
 #     keys_values = dspy.InputField(prefix="Keys and Values: ", format=str)
 #     output = dspy.OutputField(
@@ -44,12 +45,15 @@ class FirstSecondLevel(dspy.Signature):
         desc="relevant keys separated by semicolon",
     )
 
+
 emb_fn = embedding_functions.OpenAIEmbeddingFunction(
     api_key=os.environ["OPENAI_API_KEY"],
     model_name=config_params["VECTORDB"]["EMBEDDING_MODEL_NAME"],
 )
 
-llm = dspy.OpenAI(model=config_params['LEVEL_NODE_LLM']['OPENAI_LLM_MODEL'],max_tokens=512)
+llm = dspy.OpenAI(
+    model=config_params["LEVEL_NODE_LLM"]["OPENAI_LLM_MODEL"], max_tokens=512
+)
 dspy.settings.configure(lm=llm)
 
 
@@ -123,6 +127,7 @@ dspy.settings.configure(lm=llm)
 #         )
 #         return functions['metadatas'][0]
 
+
 class SklearnAgentChroma(dspy.Module):
     def __init__(self, collection):
         super().__init__()
@@ -141,9 +146,14 @@ class SklearnAgentChroma(dspy.Module):
             n_results=3,
         )
         parent_level_str = ""
-        for parent_level_docs,parent_level_metadata in zip(parent_level['documents'][0],parent_level["metadatas"][0]):
-            if parent_level_docs in parent_level_str: continue
-            parent_level_str += f"{parent_level_metadata['parent']}: {parent_level_docs}\n\n"
+        for parent_level_docs, parent_level_metadata in zip(
+            parent_level["documents"][0], parent_level["metadatas"][0]
+        ):
+            if parent_level_docs in parent_level_str:
+                continue
+            parent_level_str += (
+                f"{parent_level_metadata['parent']}: {parent_level_docs}\n\n"
+            )
 
         parent_level_answer = self.firstSecondLevel(
             query=query, keys_values=parent_level_str
@@ -153,7 +163,7 @@ class SklearnAgentChroma(dspy.Module):
         trail_list = list(set(trail_list))
         trail_list_pairs = generate_pairs_recursive([trail_list])
 
-        trail_where_clause = get_trail_list_pairs(trail_list_pairs,"sub_level_trail")
+        trail_where_clause = get_trail_list_pairs(trail_list_pairs, "sub_level_trail")
 
         sub_level = self.collection.query(
             query_embeddings=query_emb,
@@ -162,8 +172,11 @@ class SklearnAgentChroma(dspy.Module):
         )
 
         sub_level_str = ""
-        for sub_level_docs,function_level_metadata in zip(sub_level['documents'][0],sub_level["metadatas"][0]):
-            if sub_level_docs in sub_level_str: continue
+        for sub_level_docs, function_level_metadata in zip(
+            sub_level["documents"][0], sub_level["metadatas"][0]
+        ):
+            if sub_level_docs in sub_level_str:
+                continue
             sub_level_str += f"{function_level_metadata['parent']}#{function_level_metadata['sub_level_name']}: {sub_level_docs}\n\n"
         print(sub_level_str)
         sub_level_answer = self.firstSecondLevel(
@@ -173,16 +186,15 @@ class SklearnAgentChroma(dspy.Module):
         sub_level_list = sub_level_answer.split(";")
         sub_level_list = [sbl.split("#")[-1] for sbl in sub_level_list]
         sub_level_list = list(set(sub_level_list))
-        function_list = generate_pairs_recursive([trail_list_pairs,sub_level_list])
-        function_where_clause = get_trail_list_pairs(function_list,'function_trail')
+        function_list = generate_pairs_recursive([trail_list_pairs, sub_level_list])
+        function_where_clause = get_trail_list_pairs(function_list, "function_trail")
         print(function_where_clause)
         functions = self.collection.query(
-            query_embeddings=query_emb,
-            where=function_where_clause,
-            n_results=1
+            query_embeddings=query_emb, where=function_where_clause, n_results=1
         )
-        return functions['metadatas'][0]
-    
+        return functions["metadatas"][0]
+
+
 class SklearnAgentBM25(dspy.Module):
     def __init__(self, collection):
         super().__init__()
@@ -194,70 +206,91 @@ class SklearnAgentBM25(dspy.Module):
                 "type": {"$eq": "parent_node"},
             }
         )
-        for doc,metadata in zip(parent_level['documents'],parent_level['metadatas']):
-            self.parent_langchain_docs.append(Document(page_content=doc,metadata=metadata))
+        for doc, metadata in zip(parent_level["documents"], parent_level["metadatas"]):
+            self.parent_langchain_docs.append(
+                Document(page_content=doc, metadata=metadata)
+            )
+
     def __call__(self, *args, **kwargs):
         return super().__call__(*args, **kwargs)
-    
-    def BM25RetrieverLangchain(self,query:str,node_type:str='parent_node',trail_where_clause:dict={}):
 
-        assert node_type in ['parent_node','function_node','sub_level_node'], "type must be 'parent_node' or 'function_node' or 'sub_level_node'"
-        if node_type != 'parent_node' and trail_where_clause=={}:
+    def BM25RetrieverLangchain(
+        self, query: str, node_type: str = "parent_node", trail_where_clause: dict = {}
+    ):
+
+        assert node_type in [
+            "parent_node",
+            "function_node",
+            "sub_level_node",
+        ], "type must be 'parent_node' or 'function_node' or 'sub_level_node'"
+        if node_type != "parent_node" and trail_where_clause == {}:
             raise ValueError("trail_where_clause must be a dict for function type")
-        
-        if node_type == 'parent_node':
+
+        if node_type == "parent_node":
             bm25_retriever = BM25Retriever.from_documents(
                 self.parent_langchain_docs, k=5, preprocess_func=(lambda x: x.lower())
-                )
+            )
             parent_bm25_docs = bm25_retriever.invoke(query.lower())
             return parent_bm25_docs
         else:
             function_level = self.collection.get(
-            where={
-                "$and": [
-                    trail_where_clause,
-                    {"type": {"$eq": node_type}},
-                ]
-            },
-             )
+                where={
+                    "$and": [
+                        trail_where_clause,
+                        {"type": {"$eq": node_type}},
+                    ]
+                },
+            )
             function_langchain_docs = []
-            for doc,metadata in zip(function_level['documents'],function_level['metadatas']):
-                function_langchain_docs.append(Document(page_content=doc,metadata=metadata))
+            for doc, metadata in zip(
+                function_level["documents"], function_level["metadatas"]
+            ):
+                function_langchain_docs.append(
+                    Document(page_content=doc, metadata=metadata)
+                )
             bm25_retriever = BM25Retriever.from_documents(
                 function_langchain_docs, k=3, preprocess_func=(lambda x: x.lower())
             )
             bm25_docs = bm25_retriever.invoke(query.lower())
             return bm25_docs
-       
+
     def forward(self, query: str):
-        parent_bm25_docs = self.BM25RetrieverLangchain(query,node_type="parent_node")
+        parent_bm25_docs = self.BM25RetrieverLangchain(query, node_type="parent_node")
         parent_level_str = ""
         for parent_doc in parent_bm25_docs:
-            parent_level_str+=f"{parent_doc.metadata['name']}: {parent_doc.page_content}\n"
-        
+            parent_level_str += (
+                f"{parent_doc.metadata['name']}: {parent_doc.page_content}\n"
+            )
+
         parent_level_answer = self.firstSecondLevel(
             query=query, keys_values=parent_level_str
         ).output
-        print(parent_level_str,parent_level_answer)
+        print(parent_level_str, parent_level_answer)
         trail_list = [parent_level_answer.split(";")]
         trail_list = list(set(trail_list[0]))
         trail_list_pairs = generate_pairs_recursive([trail_list])
 
         trail_where_clause = get_trail_list_pairs(trail_list_pairs)
 
-        sub_level_docs = self.BM25RetrieverLangchain(query,node_type='sub_level_node',trail_where_clause=trail_where_clause)
+        sub_level_docs = self.BM25RetrieverLangchain(
+            query, node_type="sub_level_node", trail_where_clause=trail_where_clause
+        )
         sub_level_str = ""
         for function_doc in sub_level_docs:
-            sub_level_str+=f"{function_doc.metadata['name']}: {function_doc.page_content}\n"
+            sub_level_str += (
+                f"{function_doc.metadata['name']}: {function_doc.page_content}\n"
+            )
         print(sub_level_str)
         sub_level_answer = self.firstSecondLevel(
             query=query, keys_values=sub_level_str
         ).output
-        
+
         sub_level_list = [sla.split("#")[-1] for sla in sub_level_answer.split(";")]
         sub_level_list = list(set(sub_level_list))
-        function_list = generate_pairs_recursive([trail_list_pairs,sub_level_list])
+        function_list = generate_pairs_recursive([trail_list_pairs, sub_level_list])
         function_where_clause = get_trail_list_pairs(function_list)
         print(function_where_clause)
-        functions = self.BM25RetrieverLangchain(query,node_type="function_node",trail_where_clause=function_where_clause)
+        functions = self.BM25RetrieverLangchain(
+            query, node_type="function_node", trail_where_clause=function_where_clause
+        )
         return functions

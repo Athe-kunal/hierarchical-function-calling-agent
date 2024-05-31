@@ -5,11 +5,13 @@ import json
 from copy import deepcopy
 import yaml
 from agent.utils import process_params
+
 with open("config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
         print(exc)
+
 
 def get_curr_func(data, paths, ignore_non_standard: bool = False, params_dict={}):
     curr_func = {}

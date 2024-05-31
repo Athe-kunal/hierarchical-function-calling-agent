@@ -99,6 +99,7 @@ def scrape_pandas_website():
     )
     return first_level
 
+
 def add_param_openai_data():
     with open(
         config_params["FUNCTION_CALLING_DATASET"]["PANDAS_SAVE_PATH"],

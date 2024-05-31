@@ -37,7 +37,7 @@ emb_fn = embedding_functions.OpenAIEmbeddingFunction(
     model_name=config_params["VECTORDB"]["EMBEDDING_MODEL_NAME"],
 )
 
-llm = dspy.OpenAI(model="gpt-3.5-turbo-0125",max_tokens=256)
+llm = dspy.OpenAI(model="gpt-3.5-turbo-0125", max_tokens=256)
 dspy.settings.configure(lm=llm)
 
 
@@ -105,6 +105,7 @@ class PandasAgentChroma(dspy.Module):
         )
         return functions
 
+
 class PandasAgentBM25(dspy.Module):
     def __init__(self, collection):
         super().__init__()
@@ -116,36 +117,44 @@ class PandasAgentBM25(dspy.Module):
             }
         )
         self.parent_langchain_docs = []
-        for doc,metadata in zip(parent_level['documents'],parent_level['metadatas']):
-            self.parent_langchain_docs.append(Document(page_content=doc,metadata=metadata))
+        for doc, metadata in zip(parent_level["documents"], parent_level["metadatas"]):
+            self.parent_langchain_docs.append(
+                Document(page_content=doc, metadata=metadata)
+            )
 
     def __call__(self, *args, **kwargs):
         return super().__call__(*args, **kwargs)
-    
-    def BM25RetrieverLangchain(self,query:str,type:str='parent',trail_where_clause:dict={}):
 
-        assert type in ['parent','function'], "type must be 'parent' or 'function'"
-        if type == 'function' and trail_where_clause=={}:
+    def BM25RetrieverLangchain(
+        self, query: str, type: str = "parent", trail_where_clause: dict = {}
+    ):
+
+        assert type in ["parent", "function"], "type must be 'parent' or 'function'"
+        if type == "function" and trail_where_clause == {}:
             raise ValueError("trail_where_clause must be a dict for function type")
-        
-        if type == 'parent':
+
+        if type == "parent":
             bm25_retriever = BM25Retriever.from_documents(
                 self.parent_langchain_docs, k=5, preprocess_func=(lambda x: x.lower())
             )
             parent_bm25_docs = bm25_retriever.invoke(query.lower())
             return parent_bm25_docs
-        elif type == 'function':
+        elif type == "function":
             function_level = self.collection.get(
-            where={
-                "$and": [
-                    trail_where_clause,
-                    {"type": {"$eq": "function_node"}},
-                ]
-            },
-             )
+                where={
+                    "$and": [
+                        trail_where_clause,
+                        {"type": {"$eq": "function_node"}},
+                    ]
+                },
+            )
             function_langchain_docs = []
-            for doc,metadata in zip(function_level['documents'],function_level['metadatas']):
-                function_langchain_docs.append(Document(page_content=doc,metadata=metadata))
+            for doc, metadata in zip(
+                function_level["documents"], function_level["metadatas"]
+            ):
+                function_langchain_docs.append(
+                    Document(page_content=doc, metadata=metadata)
+                )
             bm25_retriever = BM25Retriever.from_documents(
                 function_langchain_docs, k=5, preprocess_func=(lambda x: x.lower())
             )
@@ -156,8 +165,8 @@ class PandasAgentBM25(dspy.Module):
         parent_bm25_docs = self.BM25RetrieverLangchain(query)
         parent_level_str = ""
         for parent_doc in parent_bm25_docs:
-            parent_level_str+=f"{parent_doc.metadata['name']}: {parent_doc.metadata['node_description']}"
-        
+            parent_level_str += f"{parent_doc.metadata['name']}: {parent_doc.metadata['node_description']}"
+
         parent_level_answer = self.firstSecondLevel(
             query=query, keys_values=parent_level_str
         ).output
@@ -166,10 +175,12 @@ class PandasAgentBM25(dspy.Module):
 
         trail_where_clause = get_trail_list_pairs(trail_list_pairs)
 
-        function_level_docs = self.BM25RetrieverLangchain(query,type='function',trail_where_clause=trail_where_clause)
+        function_level_docs = self.BM25RetrieverLangchain(
+            query, type="function", trail_where_clause=trail_where_clause
+        )
         function_level_str = ""
         for function_doc in function_level_docs:
-            function_level_str+=f"{function_doc.metadata['function_name']}: {function_doc.metadata['function_desc']}"
+            function_level_str += f"{function_doc.metadata['function_name']}: {function_doc.metadata['function_desc']}"
         print(function_level_str)
         function_level_answer = self.firstSecondLevel(
             query=query, keys_values=function_level_str

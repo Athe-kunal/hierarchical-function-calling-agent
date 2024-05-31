@@ -28,8 +28,9 @@ class FirstSecondLevel(dspy.Signature):
     )
 
 
+os.environ["DSP_CACHEBOOL"] = "false"
 
-os.environ['DSP_CACHEBOOL'] = 'false'
+
 class OpenBBAgentChroma(dspy.Module):
     """OpenBB Agent for function calling"""
 
@@ -55,12 +56,16 @@ class OpenBBAgentChroma(dspy.Module):
         question_emb = emb_fn([query])[0]
         first_level_results = self.collection.query(
             query_embeddings=question_emb,
-            where={"type":"level_1"},
+            where={"type": "level_1"},
             n_results=5,
         )
         first_level_str = ""
-        for first_level_docs,first_level_metadata in zip(first_level_results['documents'][0],first_level_results['metadatas'][0]):
-            first_level_str += f"{first_level_metadata['node_name']}: {first_level_docs}\n\n"
+        for first_level_docs, first_level_metadata in zip(
+            first_level_results["documents"][0], first_level_results["metadatas"][0]
+        ):
+            first_level_str += (
+                f"{first_level_metadata['node_name']}: {first_level_docs}\n\n"
+            )
         print(f"\033[92mFirst level string: {first_level_str}\033[0m")
         first_level_answer = self.firstSecondLevel(
             query=query, keys_values=first_level_str
@@ -70,7 +75,9 @@ class OpenBBAgentChroma(dspy.Module):
         if ";" in first_level_answer:
             # ['crypto','index']
             unique_first_level_answer = list(set(first_level_answer.split(";")))
-            trail_list = [[fla.strip() for fla in unique_first_level_answer if fla!=""]]
+            trail_list = [
+                [fla.strip() for fla in unique_first_level_answer if fla != ""]
+            ]
 
         else:
             trail_list = [[first_level_answer]]
@@ -80,7 +87,9 @@ class OpenBBAgentChroma(dspy.Module):
             trail_list_pairs = generate_pairs_recursive(trail_list)
 
             trail_where_clause = get_trail_list_pairs(trail_list_pairs)
-            print(f"\033[93mCurrent Trail: {trail_list_pairs} and level: {curr_level}\033[0m")
+            print(
+                f"\033[93mCurrent Trail: {trail_list_pairs} and level: {curr_level}\033[0m"
+            )
             subsequent_level = self.collection.query(
                 query_embeddings=question_emb,
                 where={
@@ -122,7 +131,9 @@ class OpenBBAgentChroma(dspy.Module):
                 curr_trail_list = []
                 subsequent_level_str = ""
                 peanultimate_node_dict = {}
-                for subsequent_level_docs,subsequent_level_metadata in zip(subsequent_level['documents'][0],subsequent_level["metadatas"][0]):
+                for subsequent_level_docs, subsequent_level_metadata in zip(
+                    subsequent_level["documents"][0], subsequent_level["metadatas"][0]
+                ):
                     if subsequent_level_metadata["peanultimate_node"]:
                         function_call = self.collection.get(
                             where={
@@ -147,11 +158,9 @@ class OpenBBAgentChroma(dspy.Module):
                             curr_trail_list[-1].append(
                                 subsequent_level_metadata["node_name"]
                             )
-                    subsequent_level_data = (
-                        subsequent_level_docs
-                        .replace("\n\n", "")
-                        .replace("\n", "")
-                    )
+                    subsequent_level_data = subsequent_level_docs.replace(
+                        "\n\n", ""
+                    ).replace("\n", "")
                     subsequent_level_str += f"{subsequent_level_metadata['node_name']}: {subsequent_level_data}\n\n"
                 print(
                     f"\033[91mSubsequent level {curr_level} string to LLM: {subsequent_level_str}\033[0m"
@@ -161,12 +170,18 @@ class OpenBBAgentChroma(dspy.Module):
                         query=query, keys_values=subsequent_level_str
                     )
                     prompts.append(self.first_level_llm.history)
-                    print(f"\033[94mLLM Answer: {subsequent_level_answer}\033[0m", )
+                    print(
+                        f"\033[94mLLM Answer: {subsequent_level_answer}\033[0m",
+                    )
                     splitted_subsequent_level_answer = (
                         subsequent_level_answer.output.split(";")
                     )
-                    splitted_subsequent_level_answer = list(set(splitted_subsequent_level_answer))
-                    splitted_subsequent_level_answer = [sla for sla in splitted_subsequent_level_answer if sla!=""]
+                    splitted_subsequent_level_answer = list(
+                        set(splitted_subsequent_level_answer)
+                    )
+                    splitted_subsequent_level_answer = [
+                        sla for sla in splitted_subsequent_level_answer if sla != ""
+                    ]
                     if curr_trail_list == []:
                         curr_trail_list.append(
                             [sl.strip() for sl in splitted_subsequent_level_answer]
@@ -201,9 +216,13 @@ class OpenBBAgentBM25(dspy.Module):
         self.collection = collection
         get_first_level = self.collection.get(where={"type": "level_1"})
         self.first_level = ""
-        for first_level_docs,first_level_metadata in zip(get_first_level['documents'],get_first_level["metadatas"]):
+        for first_level_docs, first_level_metadata in zip(
+            get_first_level["documents"], get_first_level["metadatas"]
+        ):
 
-            self.first_level += f"{first_level_metadata['node_name']}: {first_level_docs}\n"
+            self.first_level += (
+                f"{first_level_metadata['node_name']}: {first_level_docs}\n"
+            )
         self.firstSecondLevel = dspy.ChainOfThought(FirstSecondLevel)
 
     def __call__(self, *args, **kwargs):
@@ -235,10 +254,10 @@ class OpenBBAgentBM25(dspy.Module):
             langchain_docs = []
             if len(vectordb_docs["metadatas"]) == 0:
                 return [Document(page_content="")]
-            for docs,data in zip(vectordb_docs['documents'],vectordb_docs["metadatas"]):
-                langchain_docs.append(
-                    Document(page_content=docs, metadata=data)
-                )
+            for docs, data in zip(
+                vectordb_docs["documents"], vectordb_docs["metadatas"]
+            ):
+                langchain_docs.append(Document(page_content=docs, metadata=data))
         # k_value = max(1,len(vectordb_docs['metadatas'])//2)
         bm25_retriever = BM25Retriever.from_documents(
             langchain_docs, k=5, preprocess_func=(lambda x: x.lower())
@@ -262,7 +281,9 @@ class OpenBBAgentBM25(dspy.Module):
         while True:
             # if curr_level>3: break
             trail_list_pairs = generate_pairs_recursive(trail_list)
-            print(f"\033[93Current Trail: {trail_list_pairs} and level: {curr_level}\033[0m")
+            print(
+                f"\033[93Current Trail: {trail_list_pairs} and level: {curr_level}\033[0m"
+            )
 
             trail_where_clause = get_trail_list_pairs(trail_list_pairs)
             bm25_docs = self.BM25RetrieverLangchain(
