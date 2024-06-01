@@ -144,14 +144,14 @@ class PandasAgentChroma(dspy.Module):
         # Parent level querying
         parent_level = self.collection.query(
             query_embeddings=query_emb,
-            n_results=3,
+            n_results=5,
         )
         parent_level_str = ""
         for parent_level_docs, parent_level_metadata in zip(
             parent_level["documents"][0], parent_level["metadatas"][0]
         ):
-            if parent_level_docs in parent_level_str:
-                continue
+            # if parent_level_docs in parent_level_str:
+            #     continue
             parent_level_str += (
                 f"{parent_level_metadata['parent']}: {parent_level_docs}\n\n"
             )
@@ -169,15 +169,15 @@ class PandasAgentChroma(dspy.Module):
         sub_level = self.collection.query(
             query_embeddings=query_emb,
             where=trail_where_clause,
-            n_results=3,
+            n_results=10,
         )
 
         sub_level_str = ""
         for sub_level_docs, function_level_metadata in zip(
             sub_level["documents"][0], sub_level["metadatas"][0]
         ):
-            if sub_level_docs in sub_level_str:
-                continue
+            # if sub_level_docs in sub_level_str:
+            #     continue
             sub_level_str += f"{function_level_metadata['parent']}#{function_level_metadata['sub_level_name']}: {sub_level_docs}\n\n"
         print(sub_level_str)
         sub_level_answer = self.firstSecondLevel(
@@ -185,7 +185,6 @@ class PandasAgentChroma(dspy.Module):
         ).output
         print(sub_level_answer)
         sub_level_list = sub_level_answer.split(";")
-        sub_level_list = [sbl.split("#")[-1] for sbl in sub_level_list]
         sub_level_list = list(set(sub_level_list))
         function_list = generate_pairs_recursive([trail_list_pairs, sub_level_list])
         function_where_clause = get_trail_list_pairs(function_list, "function_trail")
@@ -196,7 +195,7 @@ class PandasAgentChroma(dspy.Module):
         return functions["metadatas"][0]
 
 
-class SklearnAgentBM25(dspy.Module):
+class PandasAgentBM25(dspy.Module):
     def __init__(self, collection):
         super().__init__()
         self.collection = collection

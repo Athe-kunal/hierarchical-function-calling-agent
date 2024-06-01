@@ -15,7 +15,10 @@ with open("config.yaml") as stream:
 def get_links(id_elem, class_name):
     def process_link(link):
         link = link.replace("..", "")
-        return "https://pandas.pydata.org/docs/reference/" + link
+        if link.startswith("https"):
+            return link
+        else:
+            return "https://pandas.pydata.org/docs/reference/" + link
 
     curr_urls = []
     try:

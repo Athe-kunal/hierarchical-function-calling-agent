@@ -101,18 +101,20 @@ def build_docs_metadata():
             for sub_level_name, sub_level_funcs in sub_level.items():
                 # defaults --> function definitions
                 for funcs in sub_level_funcs:
+                    full_function = funcs["function_definitions"]["full_function"]
+                    if full_function == "": continue
                     function_text = funcs["function_definitions"]["function_text"]
                     function_text = function_text.replace("\n\n", " ")
                     function_text = function_text.replace("\n", " ")
                     function_text = function_text.replace("Examples", " ")
+                    if function_text == "":
+                        function_text = funcs["func_name"]
                     docs.append(function_text)
                     metadata.append(
                         {
                             "function_name": funcs["func_name"],
                             "function_url": funcs["func_url"],
-                            "full_function": funcs["function_definitions"][
-                                "full_function"
-                            ],
+                            "full_function": full_function,
                             "function_calling": str(funcs["function_calling"]),
                             "parent": parent_name,
                             "sub_level_name": sub_level_name,

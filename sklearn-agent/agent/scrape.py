@@ -15,7 +15,10 @@ with open("config.yaml") as stream:
 def get_links(id_elem, class_name):
     def process_link(link):
         link = link.replace("..", "")
-        return "https://scikit-learn.org/stable" + link
+        if link.startswith("https"):
+            return link
+        else: 
+            return "https://scikit-learn.org/stable" + link
 
     curr_urls = []
     try:
