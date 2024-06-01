@@ -123,8 +123,8 @@ def build_docs_metadata():
     return docs, metadata
 
 
-@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
-def build_database(offset: int, docs, metadata, api_key):
+# @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+def build_database(docs, metadata, api_key):
     database_path = config_params["VECTORDB"]["BASE_DATABASE_PATH"]
     collection_name = config_params["VECTORDB"]["COLLECTION_NAME"]
     load_dotenv(find_dotenv(), override=True)
@@ -137,11 +137,7 @@ def build_database(offset: int, docs, metadata, api_key):
         name=collection_name, embedding_function=emb_fn
     )
 
-    sklearn_ids = [f"id{offset+i}" for i in range(len(docs))]
-    all_ids = sklearn_collection.get()["ids"]
-    if all(skids in all_ids for skids in sklearn_ids):
-        print(f"All ids already present in database {offset}")
-        return
+    sklearn_ids = [f"id{i}" for i in range(len(docs))]
     batches = create_batches(
         api=client, ids=sklearn_ids, documents=docs, metadatas=metadata
     )

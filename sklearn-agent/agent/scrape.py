@@ -162,7 +162,7 @@ def get_param_data(first_level):
                         # ../.. --> https://scikit-learn.org/stable/developers
                         # ../ --> https://scikit-learn.org/stable/modules
                         func_text = []
-                        for element in func_soup.find_all(True):
+                        for element in func_soup.find("dd").find_all(True):
                             if "field-list" in element.get("class", []):
                                 break
                             if element.name == "p":

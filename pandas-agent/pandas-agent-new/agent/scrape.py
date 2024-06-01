@@ -15,7 +15,7 @@ with open("config.yaml") as stream:
 def get_links(id_elem, class_name):
     def process_link(link):
         link = link.replace("..", "")
-        return "https://scikit-learn.org/stable" + link
+        return "https://pandas.pydata.org/docs/reference/" + link
 
     curr_urls = []
     try:
@@ -57,7 +57,7 @@ def get_odd_even_urls(id_elem):
     return odd_urls + even_urls
 
 
-def scrape_sklearn_website():
+def scrape_pandas_website():
     base_url = "https://pandas.pydata.org/docs/reference/index.html"
     response = requests.get(base_url)
     soup = BeautifulSoup(response.text, "lxml")
@@ -73,6 +73,7 @@ def scrape_sklearn_website():
     for parent_functions in l1_elems:
         for func in parent_functions.find_all("a"):
             href = func["href"]
+            if "#" in href: continue
             if ".." not in href:
                 first_level.update(
                     {
@@ -92,9 +93,9 @@ def scrape_sklearn_website():
         if "<h2>" in str(parent_soup):
             all_urls_dict = []
             h2_elements = parent_soup.find_all("h2")
-            default_func_table = parent_soup.find(id=f"module-{parent_id}").find(
-                class_="autosummary longtable table autosummary", recursive=False
-            )
+            # default_func_table = parent_soup.find(id=f"module-{parent_id}").find(
+            #     class_="autosummary longtable table autosummary", recursive=False
+            # )
             # tables = parent_soup.find_all(class_="autosummary longtable table autosummary")
             h2_elements = parent_soup.find_all("h2")
             h2_sections = []
@@ -111,10 +112,10 @@ def scrape_sklearn_website():
                             break
                 section_text = "".join(curr_h2_sections)
                 h2_sections.append(BeautifulSoup(section_text, "lxml"))
-            if default_func_table is not None:
-                default_urls = get_odd_even_urls(default_func_table)
-                default_dict = {"defaults": default_urls}
-                all_urls_dict.append(default_dict)
+            # if default_func_table is not None:
+            #     default_urls = get_odd_even_urls(default_func_table)
+            #     default_dict = {"defaults": default_urls}
+            #     all_urls_dict.append(default_dict)
                 # Skip the first table as it is default table
                 # tables = tables[1:]
             assert len(h2_sections) == len(
@@ -152,7 +153,12 @@ def get_param_data(first_level):
                     func_soup = BeautifulSoup(
                         func_response.content, "lxml", from_encoding="utf-8"
                     )
-
+                    curr_dict = {
+                            "function_name": "",
+                            "full_function": "",
+                            "function_text": "",
+                            "parameter_names_desc": [],
+                        }
                     func_name = func_soup.find("h1").text.replace("#", "")  # remove #
                     elem = func_soup.find(attrs={"class": "sig sig-object py"})
                     try:
@@ -162,7 +168,7 @@ def get_param_data(first_level):
                         # ../.. --> https://scikit-learn.org/stable/developers
                         # ../ --> https://scikit-learn.org/stable/modules
                         func_text = []
-                        for element in func_soup.find_all(True):
+                        for element in func_soup.find("dd").find_all(True):
                             if "field-list" in element.get("class", []):
                                 break
                             if element.name == "p":
@@ -175,12 +181,12 @@ def get_param_data(first_level):
                             if "../.." in func_text_user_guide:
                                 func_text_user_guide = func_text_user_guide.replace(
                                     "../..",
-                                    "https://scikit-learn.org/stable/developers",
+                                    "https://pandas.pydata.org/docs",
                                 )
-                            elif "../" in func_text_user_guide:
-                                func_text_user_guide = func_text_user_guide.replace(
-                                    "../", "https://scikit-learn.org/stable/modules/"
-                                )
+                            # elif "../" in func_text_user_guide:
+                            #     func_text_user_guide = func_text_user_guide.replace(
+                            #         "../", "https://scikit-learn.org/stable/modules/"
+                            #     )
                             else:
                                 pass
                         except:
