@@ -199,7 +199,7 @@ def get_trail_list_pairs(trail_list_pairs, metadata_name="trail"):
         trail_where_clause = {metadata_name: {"$eq": trail_list_pairs[0]}}
     elif len(trail_list_pairs) > 1:
         trail_where_clause = {
-            "$or": [{metadata_name: {"$eq": t}} for t in trail_list_pairs]
+            "$or": [{metadata_name: {"$eq": t.strip()}} for t in trail_list_pairs]
         }
     return trail_where_clause
 
