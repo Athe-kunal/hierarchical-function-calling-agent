@@ -1,8 +1,8 @@
 FUNCTION_CALLING_DATASET:
-  REFERENCE_JSON_FILE: "data/reference.json"
-  FUNCTION_SAVE_DEST: "data/openbb_functions.json"
+  REFERENCE_JSON_FILE: "openbb_agent/data/reference.json"
+  FUNCTION_SAVE_DEST: "openbb_agent/data/openbb_functions.json"
 
 VECTORDB:
-  BASE_DATABASE_PATH: "data/OpenBBv2"
+  BASE_DATABASE_PATH: "openbb_agent/data/OpenBBv2"
   COLLECTION_NAME: "obb_docsv2"
   EMBEDDING_MODEL_NAME: "text-embedding-3-small"

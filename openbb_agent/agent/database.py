@@ -7,9 +7,9 @@ import os
 from chromadb.utils.batch_utils import create_batches
 import yaml
 from dotenv import load_dotenv, find_dotenv
-from agent.utils import split_description
+from openbb_agent.agent.utils import split_description
 
-with open("config.yaml") as stream:
+with open("openbb_agent/config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
@@ -221,7 +221,7 @@ def build_docs_metadata(router_names_graph, MAX_WORDS: int = 500):
 def build_database(docs, metadata, api_key):
     database_path = config_params["VECTORDB"]["BASE_DATABASE_PATH"]
     collection_name = config_params["VECTORDB"]["COLLECTION_NAME"]
-    load_dotenv(override=True)
+    load_dotenv(find_dotenv(),override=True)
     emb_fn = embedding_functions.OpenAIEmbeddingFunction(
         api_key=api_key, model_name=config_params["VECTORDB"]["EMBEDDING_MODEL_NAME"]
     )

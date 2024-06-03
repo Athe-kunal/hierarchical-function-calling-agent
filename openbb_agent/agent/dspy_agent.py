@@ -3,7 +3,7 @@ from langchain_community.retrievers import BM25Retriever
 from langchain.schema import Document
 import chromadb.utils.embedding_functions as embedding_functions
 import os
-from agent.utils import generate_pairs, generate_pairs_recursive, get_trail_list_pairs
+from openbb_agent.agent.utils import generate_pairs_recursive, get_trail_list_pairs
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
