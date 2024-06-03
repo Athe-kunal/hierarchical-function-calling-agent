@@ -5,11 +5,11 @@ import json
 import yaml
 import chromadb.utils.embedding_functions as embedding_functions
 import os
-from agent.utils import *
+from pandas_agent.agent.utils import *
 from langchain_community.retrievers import BM25Retriever
 from langchain.schema import Document
 
-with open("config.yaml") as stream:
+with open("pandas_agent/config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:

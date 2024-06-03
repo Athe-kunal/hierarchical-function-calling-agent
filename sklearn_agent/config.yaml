@@ -1,14 +1,14 @@
 FUNCTION_CALLING_DATASET:
-  FUNCTION_SAVE_DEST: "data/sklearn_function_openai.json"
+  FUNCTION_SAVE_DEST: "sklearn_agent/data/sklearn_function_openai.json"
 
 VECTORDB:
-  BASE_DATABASE_PATH: "data/SklearnDB"
+  BASE_DATABASE_PATH: "sklearn_agent/data/SklearnDB"
   COLLECTION_NAME: "sklearn_docs"
   EMBEDDING_MODEL_NAME: "text-embedding-3-small"
   BATCH_SIZE: 200
 
 PARENTS_SUMMARY:
-  SUMMARY_JSON_FILE_PATH: "data/parent_summary_dict.json"
+  SUMMARY_JSON_FILE_PATH: "sklearn_agent/data/parent_summary_dict.json"
   OPENAI_LLM_MODEL: "gpt-3.5-turbo-0125"
 
 LEVEL_NODE_LLM:

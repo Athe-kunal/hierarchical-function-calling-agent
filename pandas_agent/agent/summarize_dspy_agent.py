@@ -3,9 +3,9 @@ from dotenv import load_dotenv, find_dotenv
 from tqdm import tqdm
 import json
 import yaml
-from agent.utils import get_parents_dict
+from pandas_agent.agent.utils import get_parents_dict
 
-with open("config.yaml") as stream:
+with open("pandas_agent/config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:

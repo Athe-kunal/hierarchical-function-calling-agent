@@ -1,11 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-from agent.utils import add_function_calling
+from sklearn_agent.agent.utils import add_function_calling
 import yaml
 import json
 
-with open("config.yaml") as stream:
+with open("sklearn_agent/config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:

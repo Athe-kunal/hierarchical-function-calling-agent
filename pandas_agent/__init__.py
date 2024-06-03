@@ -1,4 +1,3 @@
-from pandas_agent_new.agent.dspy_agent import PandasAgentBM25
-from pandas_agent_new.agent.dspy_agent import PandasAgentChroma
-from pandas_agent_new.agent.database import load_database,build_database
-from pandas_agent_new.agent.scrape import scrape_pandas_website
+from pandas_agent.agent.dspy_agent import PandasAgentBM25,PandasAgentChroma
+from pandas_agent.agent.database import load_database,build_database
+from pandas_agent.agent.scrape import scrape_pandas_website

@@ -1,5 +1,3 @@
-import networkx as nx
-from typing import List
 import json
 import chromadb
 import chromadb.utils.embedding_functions as embedding_functions
@@ -10,10 +8,9 @@ import ast
 from chromadb.utils.batch_utils import create_batches
 import yaml
 from dotenv import load_dotenv, find_dotenv
-from tenacity import retry, stop_after_attempt, wait_random_exponential, wait_fixed
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-with open("config.yaml") as stream:
+with open("sklearn_agent/config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:

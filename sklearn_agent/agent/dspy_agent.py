@@ -1,15 +1,13 @@
 import dspy
 from dotenv import load_dotenv, find_dotenv
-from tqdm import tqdm
-import json
 import yaml
 import chromadb.utils.embedding_functions as embedding_functions
 import os
-from agent.utils import *
+from sklearn_agent.agent.utils import *
 from langchain_community.retrievers import BM25Retriever
 from langchain.schema import Document
 
-with open("config.yaml") as stream:
+with open("sklearn_agent/config.yaml") as stream:
     try:
         config_params = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
