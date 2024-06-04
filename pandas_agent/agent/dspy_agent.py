@@ -185,6 +185,7 @@ class PandasAgentChroma(dspy.Module):
         ).output
         print(sub_level_answer)
         sub_level_list = sub_level_answer.split(";")
+        sub_level_list = [sla.split("#")[-1] for sla in sub_level_list]
         sub_level_list = list(set(sub_level_list))
         function_list = generate_pairs_recursive([trail_list_pairs, sub_level_list])
         function_where_clause = get_trail_list_pairs(function_list, "function_trail")
