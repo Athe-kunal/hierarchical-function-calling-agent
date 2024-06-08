@@ -1,5 +1,6 @@
 import re
 
+
 def process_params(params_desc):
     params_desc_type = params_desc["type"]
     if "type" in params_desc:
@@ -39,6 +40,7 @@ def process_params(params_desc):
         elif "bool" in params_desc["type"]:
             params_desc.update({"type": "boolean", "enum": ["True", "False"]})
     return params_desc
+
 
 def generate_pairs(list1, list2):
     pairs = []

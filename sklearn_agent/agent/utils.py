@@ -26,7 +26,8 @@ def add_function_calling(data):
                         properties_dict = {}
                         for params in function_definitions["parameter_names_desc"]:
                             param_name = params["param_name"]
-                            if param_name == "**params" or param_name=="**kwds": continue
+                            if param_name == "**params" or param_name == "**kwds":
+                                continue
                             type = params["param_type"]
                             if "int" in type:
                                 type = "integer"
