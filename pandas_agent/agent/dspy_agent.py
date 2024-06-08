@@ -202,8 +202,10 @@ class PandasAgentBM25(dspy.Module):
         self.collection = collection
         self.firstSecondLevel = dspy.Predict(FirstSecondLevel)
         all_docs = self.collection.get()
-        self.langchain_docs = [Document(page_content=doc,metadata=meta) for doc,meta in zip(all_docs['documents'],all_docs['metadatas'])]
-
+        self.langchain_docs = [
+            Document(page_content=doc, metadata=meta)
+            for doc, meta in zip(all_docs["documents"], all_docs["metadatas"])
+        ]
 
     def __call__(self, *args, **kwargs):
         return super().__call__(*args, **kwargs)
@@ -227,9 +229,7 @@ class PandasAgentBM25(dspy.Module):
             parent_bm25_docs = bm25_retriever.invoke(query.lower())
             return parent_bm25_docs
         else:
-            function_level = self.collection.get(
-                where=trail_where_clause
-            )
+            function_level = self.collection.get(where=trail_where_clause)
             function_langchain_docs = []
             for doc, metadata in zip(
                 function_level["documents"], function_level["metadatas"]
@@ -266,7 +266,9 @@ class PandasAgentBM25(dspy.Module):
 
         trail_where_clause = get_trail_list_pairs(trail_list_pairs, "sub_level_trail")
 
-        sub_level_docs = self.BM25RetrieverLangchain(query,"sub_level_node",trail_where_clause)
+        sub_level_docs = self.BM25RetrieverLangchain(
+            query, "sub_level_node", trail_where_clause
+        )
 
         sub_level_str = ""
         for sub_level in sub_level_docs:
@@ -285,5 +287,7 @@ class PandasAgentBM25(dspy.Module):
         function_list = generate_pairs_recursive([trail_list_pairs, sub_level_list])
         function_where_clause = get_trail_list_pairs(function_list, "function_trail")
         print(function_where_clause)
-        functions = self.BM25RetrieverLangchain(query,"function_node",function_where_clause)
+        functions = self.BM25RetrieverLangchain(
+            query, "function_node", function_where_clause
+        )
         return functions[0].metadata

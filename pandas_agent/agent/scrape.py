@@ -76,7 +76,8 @@ def scrape_pandas_website():
     for parent_functions in l1_elems:
         for func in parent_functions.find_all("a"):
             href = func["href"]
-            if "#" in href: continue
+            if "#" in href:
+                continue
             if ".." not in href:
                 first_level.update(
                     {
@@ -119,8 +120,8 @@ def scrape_pandas_website():
             #     default_urls = get_odd_even_urls(default_func_table)
             #     default_dict = {"defaults": default_urls}
             #     all_urls_dict.append(default_dict)
-                # Skip the first table as it is default table
-                # tables = tables[1:]
+            # Skip the first table as it is default table
+            # tables = tables[1:]
             assert len(h2_sections) == len(
                 h2_elements
             ), f"Assertion error for {parent_name}, number of heading 2 elements is {len(h2_elements)} and number of tables is {len(h2_sections)}"
@@ -157,11 +158,11 @@ def get_param_data(first_level):
                         func_response.content, "lxml", from_encoding="utf-8"
                     )
                     curr_dict = {
-                            "function_name": "",
-                            "full_function": "",
-                            "function_text": "",
-                            "parameter_names_desc": [],
-                        }
+                        "function_name": "",
+                        "full_function": "",
+                        "function_text": "",
+                        "parameter_names_desc": [],
+                    }
                     func_name = func_soup.find("h1").text.replace("#", "")  # remove #
                     elem = func_soup.find(attrs={"class": "sig sig-object py"})
                     try:

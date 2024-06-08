@@ -102,7 +102,8 @@ def build_docs_metadata():
                 # defaults --> function definitions
                 for funcs in sub_level_funcs:
                     full_function = funcs["function_definitions"]["full_function"]
-                    if full_function == "": continue
+                    if full_function == "":
+                        continue
                     function_text = funcs["function_definitions"]["function_text"]
                     function_text = function_text.replace("\n\n", " ")
                     function_text = function_text.replace("\n", " ")

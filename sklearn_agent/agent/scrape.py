@@ -17,7 +17,7 @@ def get_links(id_elem, class_name):
         link = link.replace("..", "")
         if link.startswith("https"):
             return link
-        else: 
+        else:
             return "https://scikit-learn.org/stable" + link
 
     curr_urls = []

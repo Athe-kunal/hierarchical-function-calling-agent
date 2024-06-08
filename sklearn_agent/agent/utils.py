@@ -25,6 +25,8 @@ def add_function_calling(data):
                     if function_definitions["parameter_names_desc"] != []:
                         properties_dict = {}
                         for params in function_definitions["parameter_names_desc"]:
+                            param_name = params["param_name"]
+                            if param_name == "**params" or param_name=="**kwds": continue
                             type = params["param_type"]
                             if "int" in type:
                                 type = "integer"
@@ -36,32 +38,63 @@ def add_function_calling(data):
                                 type = "boolean"
                                 type_dict = {"type": type}
                             elif "float" in type:
-                                type = "float"
+                                type = "number"
                                 type_dict = {"type": type}
                             elif "float" in type:
                                 type = "float"
                                 type_dict = {"type": type}
-                            elif "callable" in type or "object" in type:
+                            elif (
+                                "dict" in type
+                                or "Sequence" in type
+                                or "sequence" in type
+                                or "iterable" in type
+                                or "Array" in type
+                                or "matrix" in type
+                                or "Matrix" in type
+                                or "Ignored" in type
+                                or "tuple" in type
+                                or "Tuples" in type
+                                or "iterable" in type
+                                or "Iterable" in type
+                                or "indexable" in type
+                                or "dict" in type
+                            ):
+                                type = "array"
+                                type_dict = {"type": type}
+                            elif (
+                                "callable" in type
+                                or "object" in type
+                                or "Callable" in type
+                                or "DataFrame" in type
+                                or "Series" in type
+                                or "instance" in type
+                                or "matplotlib" in type
+                            ):
                                 type = "object"
                                 type_dict = {"type": type}
                             elif "Union" in type or "list" in type or "array" in type:
                                 type = "array"
                                 type_dict = {"type": type}
-                            elif (
-                                "{" in type
-                                and "}" in type
-                                and "’" in type
-                                and "‘" in type
-                            ):
+                            elif "{" in type and "}" in type:
                                 list_params = type[type.find("{") + 1 : type.find("}")]
-                                list_params = (
-                                    list_params.replace("’", "")
-                                    .replace("‘", "")
-                                    .split(",")
-                                )
+                                if "’" in type and "‘" in type:
+                                    list_params = (
+                                        list_params.replace("’", "")
+                                        .replace("‘", "")
+                                        .split(",")
+                                    )
+                                elif "”" in type and "“" in type:
+                                    list_params = (
+                                        list_params.replace("“", "")
+                                        .replace("”", "")
+                                        .split(",")
+                                    )
+                                else:
+                                    list_params = list_params.split(",")
+                                list_params = [lp.strip() for lp in list_params]
                                 type_dict = {"type": "string", "enum": list_params}
                             else:
-                                type_dict = {"type": type}
+                                type_dict = {"type": "object"}
                             type_dict.update(
                                 {
                                     "description": params["param_type"]
