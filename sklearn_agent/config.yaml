@@ -2,8 +2,8 @@ FUNCTION_CALLING_DATASET:
   FUNCTION_SAVE_DEST: "sklearn_agent/data/sklearn_function_openai.json"
 
 VECTORDB:
-  BASE_DATABASE_PATH: "sklearn_agent/data/SklearnDB"
-  COLLECTION_NAME: "sklearn_docs"
+  BASE_DATABASE_PATH: "sklearn_agent/data/SklearnDB2"
+  COLLECTION_NAME: "sklearn_docs2"
   EMBEDDING_MODEL_NAME: "text-embedding-3-small"
   BATCH_SIZE: 200
 

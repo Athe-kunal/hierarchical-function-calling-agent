@@ -203,8 +203,8 @@ def get_param_data(first_level):
                         }
                         em = func_soup.find_all(attrs={"class": "field-odd"})
                         if em[0].text == "Parameters:":
-                            param_names = em[-1].find_all("dt")
-                            desc_list = em[-1].find_all("dd")
+                            param_names = em[1].find_all("dt")
+                            desc_list = em[1].find_all("dd")
                             for pn, dn in zip(param_names, desc_list):
                                 try:
                                     param_name = pn.strong.text

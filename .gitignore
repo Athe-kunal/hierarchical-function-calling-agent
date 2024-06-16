@@ -3,7 +3,7 @@ PandasDB
 __pycache__
 Pandas
 .env
-SklearnDB
+SklearnDB*
 *.txt
 .cache
 coding
