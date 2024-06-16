@@ -115,6 +115,9 @@ def build_docs_metadata():
                             "sub_level_name": sub_level_name,
                             "sub_level_trail": parent_name,
                             "function_trail": f"{parent_name}-->{sub_level_name}",
+                            "parameters_names_desc": str(funcs["function_definitions"][
+                                "parameter_names_desc"
+                            ]),
                         }
                     )
     return docs, metadata

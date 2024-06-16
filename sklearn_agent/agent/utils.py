@@ -59,9 +59,13 @@ def add_function_calling(data):
                                 or "Iterable" in type
                                 or "indexable" in type
                                 or "dict" in type
+                                or "array" in type
                             ):
                                 type = "array"
-                                type_dict = {"type": type}
+                                if "str" in type:
+                                    type_dict = {"type": type,"items":{"type":"string"}}
+                                else:
+                                    type_dict = {"type": type,"items":{"type":"number"}}
                             elif (
                                 "callable" in type
                                 or "object" in type
@@ -73,9 +77,9 @@ def add_function_calling(data):
                             ):
                                 type = "object"
                                 type_dict = {"type": type}
-                            elif "Union" in type or "list" in type or "array" in type:
+                            elif "Union" in type or "list" in type:
                                 type = "array"
-                                type_dict = {"type": type}
+                                type_dict = {"type": type,"items": {"type":"string"}}
                             elif "{" in type and "}" in type:
                                 list_params = type[type.find("{") + 1 : type.find("}")]
                                 if "’" in type and "‘" in type:
@@ -96,13 +100,19 @@ def add_function_calling(data):
                                 type_dict = {"type": "string", "enum": list_params}
                             else:
                                 type_dict = {"type": "object"}
-                            type_dict.update(
-                                {
-                                    "description": params["param_type"]
-                                    + ". "
-                                    + params["param_desc"]
-                                }
-                            )
+                            params_desc = params["param_type"]+ ". "+ params["param_desc"]
+                            if 'items' in type_dict:
+                                type_dict['items'].update(
+                                    {
+                                        "description": params_desc
+                                    }
+                                )
+                            else:
+                                type_dict.update(
+                                    {
+                                        "description": params_desc
+                                    }
+                                )
 
                             properties_dict.update({params["param_name"]: type_dict})
 
